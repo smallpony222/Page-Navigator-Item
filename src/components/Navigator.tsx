@@ -2,6 +2,7 @@ import React from 'react';
 import StyledButton from './StyledButton';
 import Chain from './Chain';
 import AddButton from './AddButton';
+import { ActionMenuItem } from './ActionMenu'; // Import ActionMenuItem
 
 export interface PageItem {
   id: string | number;
@@ -10,7 +11,8 @@ export interface PageItem {
   type?: 'page' | 'addPageAction';
   isActive?: boolean;
   onPageClick?: () => void;
-  onActionClick?: () => void;
+  actionItems?: ActionMenuItem[]; // Added for ActionMenu
+  popoverHeaderTitle?: string; // Added for ActionMenu
 }
 
 interface NavigatorProps {
@@ -53,25 +55,26 @@ const Navigator: React.FC<NavigatorProps> = ({ pageItems, onAddItemClick, classN
         return (
           <React.Fragment key={item.id}>
             <StyledButton
-            icon={item.icon}
-            title={item.title}
-            isActive={item.isActive}
-            onButtonClick={item.onPageClick}
-            onActionClick={item.onActionClick}
-          />
-          {index < pageItems.length - 1 && (
-            <>
-              <Chain dashed={true} />
-              <AddButton 
-                aria-label={`Add page after ${item.title}`}
-                onClick={() => onAddItemClick?.(index)} 
-              />
-              <Chain dashed={true} />
-            </>
-          )}
-        </React.Fragment>
-      );
-    })}
+              icon={item.icon}
+              title={item.title}
+              isActive={item.isActive}
+              onButtonClick={item.onPageClick}
+              actionItems={item.actionItems} // Pass actionItems
+              popoverHeaderTitle={item.popoverHeaderTitle} // Pass popoverHeaderTitle
+            />
+            {index < pageItems.length - 1 && (
+              <>
+                <Chain dashed={true} />
+                <AddButton 
+                  aria-label={`Add page after ${item.title}`}
+                  onClick={() => onAddItemClick?.(index)} 
+                />
+                <Chain dashed={true} />
+              </>
+            )}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };

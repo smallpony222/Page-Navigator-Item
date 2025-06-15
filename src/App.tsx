@@ -1,10 +1,7 @@
-import StyledButton from './components/StyledButton';
 import React, { useState } from 'react';
 import './App.css'; // Keep App.css for any global app styles or remove if not needed
 
 import Navigator, { PageItem } from './components/Navigator';
-import Chain from './components/Chain'; // Keep if used elsewhere, or remove if only for Navigator's internals
-import AddButton from './components/AddButton'; // Keep if used elsewhere, or remove if only for Navigator's internals
 
 // Import new icons
 import InfoIcon from './components/icons/InfoIcon';
@@ -13,7 +10,7 @@ import OtherIcon from './components/icons/OtherIcon';
 import EndingIcon from './components/icons/EndingIcon';
 import AddPageIcon from './components/icons/AddPageIcon';
 import DocumentIcon from './components/icons/DocumentIcon'; // Example for newly added pages
-import ActionMenu, { ActionMenuItem } from './components/ActionMenu'; // Import ActionMenu
+import { ActionMenuItem } from './components/ActionMenu'; // Import ActionMenu
 
 // Import new icons for the settings menu
 import SetAsFirstPageIcon from './components/icons/SetAsFirstPageIcon';
@@ -39,7 +36,8 @@ function App() {
       icon: <InfoIcon className="w-5 h-5" />,
       isActive: true,
       onPageClick: () => handlePageClick('info'),
-      onActionClick: () => alert('Info page action!'),
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Info Settings',
     },
     {
       id: 'details',
@@ -47,7 +45,8 @@ function App() {
       icon: <DetailsIcon className="w-5 h-5" />,
       isActive: false,
       onPageClick: () => handlePageClick('details'),
-      onActionClick: () => alert('Details page action!'),
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Details Settings',
     },
     {
       id: 'other',
@@ -55,7 +54,8 @@ function App() {
       icon: <OtherIcon className="w-5 h-5" />,
       isActive: false,
       onPageClick: () => handlePageClick('other'),
-      onActionClick: () => alert('Other page action!'),
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Other Settings',
     },
     {
       id: 'ending',
@@ -63,7 +63,8 @@ function App() {
       icon: <EndingIcon className="w-5 h-5" />,
       isActive: false,
       onPageClick: () => handlePageClick('ending'),
-      onActionClick: () => alert('Ending page action!'),
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Ending Settings',
     },
     {
       id: 'addPageBtn',
@@ -72,7 +73,7 @@ function App() {
       type: 'addPageAction',
       isActive: false, // This type of button should not become 'active'
       onPageClick: () => alert('Trigger Add Page Flow!'), // Define actual add page logic here
-      // onActionClick is not typically used for this button type
+      // actionItems and popoverHeaderTitle are not needed for this type
     },
   ]);
 
@@ -84,13 +85,15 @@ function App() {
 
   const handleAddItem = (indexAfter: number) => {
     const newPageId = `page-${Date.now()}`;
+    const newPageTitle = `New Page ${pageItems.filter(item => item.type !== 'addPageAction').length + 1}`;
     const newPage: PageItem = {
       id: newPageId,
-      title: `New Page ${pageItems.length - 3}`, // Adjusted title to reflect actual pages
+      title: newPageTitle,
       icon: <DocumentIcon className="w-5 h-5" />, // Default icon for new pages
       isActive: true,
       onPageClick: () => handlePageClick(newPageId),
-      onActionClick: () => alert(`Action for ${newPage.title}`),
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: `${newPageTitle} Settings`,
     };
 
     setPageItems((prevItems) => {
@@ -108,15 +111,10 @@ function App() {
         <p className="text-gray-600 mt-2">Interactive navigation component with dynamic page adding.</p>
       </div>
 
-      {/* Display ActionMenu directly for now */}
-      <div className="mb-10 p-4 bg-white rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-3">Action Menu Preview:</h2>
-        <ActionMenu headerTitle="Settings" items={settingsMenuItems} />
-      </div>
 
       {/* Fixed Footer Section */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 w-full flex flex-col items-center">
-        <div className="w-full overflow-x-auto"> {/* Allow navigator container to take full width */}
+        <div className="w-full overflow-x-auto overflow-y-visible"> {/* Allow navigator container to take full width and ensure vertical overflow is visible */}
           <Navigator pageItems={pageItems} onAddItemClick={handleAddItem} />
         </div>
 
