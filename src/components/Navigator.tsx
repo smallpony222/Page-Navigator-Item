@@ -132,9 +132,9 @@ const Navigator: React.FC<NavigatorProps> = ({ pageItems, onAddItemClick, onDrag
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        // A delay of 100ms and tolerance of 5px allows for clicks to be registered before a drag starts.
-        delay: 100,
-        tolerance: 5,
+        // Temporarily reduced for debugging click vs. drag
+        delay: 0, // Was 100
+        tolerance: 1, // Was 5
       },
     }),
     useSensor(KeyboardSensor, {

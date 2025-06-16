@@ -107,11 +107,15 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
   const hasActionItems = actionItems && actionItems.length > 0;
 
   return (
+    // Root div: Serves as the draggable element (@dnd-kit) and the positioning anchor for the ActionMenu.
     <div
-      ref={setCombinedRefs} // Combines local ref and forwarded ref from dnd-kit.
-      style={style} // Applies dnd-kit's transform styles during drag.
-      className="relative" // Positioning context for the ActionMenu.
+      ref={setCombinedRefs}
+      className="relative"
+      style={style} // Applied by @dnd-kit for drag transformations.
+      {...attributes} // Accessibility and interaction attributes from @dnd-kit.
+      {...listeners} // Drag event listeners from @dnd-kit, making the entire component draggable.
     >
+      {/* Visual container for the button parts (main button area and action trigger). */}
       <div
         className={`
           flex items-center h-[32px] transition-all duration-150 ease-in-out group
@@ -121,21 +125,17 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
           }
         `}
       >
-        {/* The main button is now the DRAG HANDLE. Clicks and drags are initiated here. */}
+        {/* Primary interactive area of the button. */}
         <button
           type="button"
-          {...attributes} // dnd-kit attributes for accessibility.
-          {...listeners} // dnd-kit listeners that make this button the drag handle.
           onMouseDown={(e) => {
-            if (onButtonClick && id !== undefined) {
-              onButtonClick(id);
-            }
-            e.stopPropagation(); // Ensure event doesn't bubble up and interfere with other handlers.
+            if (onButtonClick && id !== undefined) { onButtonClick(id); }
+            e.stopPropagation(); // Prevents interference with dnd-kit drag initiation or parent handlers.
           }}
           className={`
-            flex items-center h-full py-1 px-2.5 focus:outline-none flex-grow min-w-0 cursor-grab
+            flex items-center h-full py-1 px-2.5 focus:outline-none flex-grow min-w-0 
             ${isActive
-              ? `bg-transparent text-slate-800 ${hasActionItems ? 'rounded-l-lg' : 'rounded-lg'}`
+              ? `bg-transparent text-slate-800 ${hasActionItems ? 'rounded-l-lg' : 'rounded-lg'}` 
               : `bg-transparent text-inherit justify-center w-full rounded-lg`
             }
           `}
@@ -146,21 +146,26 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
           </div>
         </button>
 
-        {/* The action button is now OUTSIDE the drag handle, so its onClick will not be captured by dnd-kit. */}
+        {/* Action menu trigger button (three-dots icon). Rendered only if active and action items exist. */}
         {isActive && hasActionItems && (
-          <button
-            ref={actionButtonRef}
-            type="button"
-            aria-label="Actions"
-            onClick={handleActionClick}
-            className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-slate-800 hover:bg-slate-200 rounded-r-lg"
-          >
-            <DotsVerticalIcon className="w-4 h-4" />
-          </button>
+          <>
+            <button
+              ref={actionButtonRef}
+              type="button"
+              aria-label="Actions"
+              onClick={handleActionClick} // Using onClick for better reliability in production.
+              onPointerDown={(e) => {
+                e.stopPropagation(); // Use onPointerDown to stop propagation for dnd-kit's PointerSensor.
+              }}
+              className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-slate-800 hover:bg-slate-200 rounded-r-lg"
+            >
+              <DotsVerticalIcon className="w-4 h-4" />
+            </button>
+          </>
         )}
       </div>
 
-      {/* ActionMenu is rendered conditionally, positioned relative to the root div. */}
+      {/* ActionMenu component, rendered conditionally and positioned relative to `componentRootRef`. */}
       {isMenuOpen && isActive && hasActionItems && popoverHeaderTitle && componentRootRef.current && (
         <ActionMenu
           headerTitle={popoverHeaderTitle}
