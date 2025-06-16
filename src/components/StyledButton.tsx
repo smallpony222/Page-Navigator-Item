@@ -126,10 +126,11 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
           type="button"
           {...attributes} // dnd-kit attributes for accessibility.
           {...listeners} // dnd-kit listeners that make this button the drag handle.
-          onClick={() => {
+          onMouseDown={(e) => {
             if (onButtonClick && id !== undefined) {
               onButtonClick(id);
             }
+            e.stopPropagation(); // Ensure event doesn't bubble up and interfere with other handlers.
           }}
           className={`
             flex items-center h-full py-1 px-2.5 focus:outline-none flex-grow min-w-0 cursor-grab
