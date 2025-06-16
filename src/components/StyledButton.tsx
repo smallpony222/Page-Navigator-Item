@@ -1,5 +1,5 @@
 // src/components/StyledButton.tsx
-import React, { useState, useRef, useEffect, forwardRef, memo } from 'react'; // Added forwardRef and memo
+import React, { useState, useRef, useEffect, forwardRef } from 'react'; // Added forwardRef
 import DotsVerticalIcon from './icons/DotsVerticalIcon';
 import ActionMenu, { ActionMenuItem } from './ActionMenu';
 import { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'; // Added
@@ -150,11 +150,11 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
 
       {/* ActionMenu (portaled) */} 
       {/* ActionMenu (portaled) */}
-      {isMenuOpen && isActive && hasActionItems && popoverHeaderTitle && actionButtonRef.current && (
+      {isMenuOpen && isActive && hasActionItems && popoverHeaderTitle && componentRootRef.current && (
         <ActionMenu
           headerTitle={popoverHeaderTitle}
           items={actionItems!} // Assert non-null as hasActionItems is true
-          triggerRef={actionButtonRef} // Position relative to the action button
+          triggerRef={componentRootRef} // Position relative to the main button component
           onClose={() => setIsMenuOpen(false)} // Callback to close the menu
         />
       )}

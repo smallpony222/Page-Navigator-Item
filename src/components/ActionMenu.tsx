@@ -41,7 +41,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
     // Dependencies: Re-calculate if the trigger element, items (affecting height), or header (affecting height) change.
     // menuRef.current itself shouldn't be a dependency as its change doesn't trigger re-render.
     // The effect runs after layout, so menuRef.current will be up-to-date.
-  }, [triggerRef, items, headerTitle]);
+  }, [triggerRef, items, headerTitle, menuPosition]);
 
   const menuStyle: React.CSSProperties = menuPosition
     ? {
