@@ -2,6 +2,10 @@
 
 This project is a React-based web application showcasing a dynamic and interactive page navigation component. It features drag-and-drop reordering, dynamic page creation, and context-sensitive action menus for each page item. The application also includes a component showcase section to demonstrate individual UI elements used within the navigator.
 
+## Project Preview
+
+![Page Navigator Preview](./public/Image.png)
+
 ## Features
 
 ### Navigator Component:
