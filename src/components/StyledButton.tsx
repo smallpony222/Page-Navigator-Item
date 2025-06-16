@@ -82,11 +82,9 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
    */
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log(`[StyledButton ID: ${id}] Action button clicked!`); // Simplified for debugging
-    // Temporarily commenting out setIsMenuOpen to isolate event firing:
-    // if (actionItems && actionItems.length > 0) {
-    //   setIsMenuOpen((prev) => !prev);
-    // }
+    if (actionItems && actionItems.length > 0) {
+      setIsMenuOpen((prev) => !prev);
+    }
   };
 
   // Effect to handle clicks outside the ActionMenu to close it.
@@ -156,8 +154,8 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
               type="button"
               aria-label="Actions"
               onClick={handleActionClick} // Using onClick for better reliability in production.
-              onMouseDown={(e) => {
-                e.stopPropagation(); // Crucial to prevent dnd-kit from interpreting this as a drag attempt.
+              onPointerDown={(e) => {
+                e.stopPropagation(); // Use onPointerDown to stop propagation for dnd-kit's PointerSensor.
               }}
               className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-slate-800 hover:bg-slate-200 rounded-r-lg"
             >
