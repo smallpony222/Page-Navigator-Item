@@ -149,12 +149,11 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
         {/* Action menu trigger button (three-dots icon). Rendered only if active and action items exist. */}
         {isActive && hasActionItems && (
           <>
-            {/* Separator line removed */}
             <button
               ref={actionButtonRef}
               type="button"
               aria-label="Actions"
-              onMouseUp={handleActionClick} // Using onMouseUp to avoid conflict with dnd-kit's onMouseDown for drag start.
+              onClick={handleActionClick} // Switched to onClick for better reliability in production builds.
               onMouseDown={(e) => {
                 e.stopPropagation(); // Crucial to prevent dnd-kit from interpreting this as a drag attempt.
               }}
