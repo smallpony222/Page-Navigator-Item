@@ -153,7 +153,7 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
               ref={actionButtonRef}
               type="button"
               aria-label="Actions"
-              onClick={handleActionClick} // Switched to onClick for better reliability in production builds.
+              onMouseUp={handleActionClick} // Using onMouseUp to avoid conflict with dnd-kit's onMouseDown for drag start.
               onMouseDown={(e) => {
                 e.stopPropagation(); // Crucial to prevent dnd-kit from interpreting this as a drag attempt.
               }}
