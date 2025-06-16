@@ -149,6 +149,7 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
         {/* Action menu trigger button (three-dots icon). Rendered only if active and action items exist. */}
         {isActive && (
           <>
+            <div className="h-[20px] w-px bg-[#E1E1E1] self-center" aria-hidden="true"></div>
             <button
               ref={actionButtonRef}
               type="button"
@@ -157,7 +158,7 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
               onPointerDown={(e) => {
                 e.stopPropagation(); // Use onPointerDown to stop propagation for dnd-kit's PointerSensor.
               }}
-              className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-slate-800 hover:bg-slate-200 rounded-r-lg"
+              className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-gray-500 hover:bg-gray-200/70 rounded-r-lg"
             >
               <DotsVerticalIcon className="w-4 h-4" />
             </button>
