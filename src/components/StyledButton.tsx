@@ -1,46 +1,68 @@
-// src/components/StyledButton.tsx
-import React, { useState, useRef, useEffect, forwardRef } from 'react'; // Added forwardRef
+import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import DotsVerticalIcon from './icons/DotsVerticalIcon';
 import ActionMenu, { ActionMenuItem } from './ActionMenu';
-import { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'; // Added
+import { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core';
 
+/**
+ * @interface StyledButtonProps
+ * @description Props for the StyledButton component.
+ * @property {string | number} id - Unique identifier for the button, crucial for list operations and event handling.
+ * @property {React.ReactNode} icon - Icon to be displayed within the button.
+ * @property {string} title - Text label for the button.
+ * @property {boolean} [isActive] - Determines if the button is in an active state, influencing styling.
+ * @property {(id: string | number) => void} [onButtonClick] - Callback executed when the main button area is clicked.
+ * @property {ActionMenuItem[]} [actionItems] - Array of items for the action menu. If provided, enables the action menu trigger.
+ * @property {string} [popoverHeaderTitle] - Title for the header of the action menu popover.
+ * @property {DraggableAttributes} [attributes] - Attributes provided by @dnd-kit/core for draggable elements.
+ * @property {DraggableSyntheticListeners} [listeners] - Event listeners provided by @dnd-kit/core for drag interactions.
+ * @property {React.CSSProperties} [style] - Style object, typically used by @dnd-kit for transform styles during drag operations.
+ */
 interface StyledButtonProps {
-  id: string | number; // Added id prop
+  id: string | number;
   icon: React.ReactNode;
   title: string;
   isActive?: boolean;
-  onButtonClick?: (id: string | number) => void; // Updated signature
+  onButtonClick?: (id: string | number) => void;
   actionItems?: ActionMenuItem[];
   popoverHeaderTitle?: string;
-  // Props from useSortable
   attributes?: DraggableAttributes;
   listeners?: DraggableSyntheticListeners;
-  style?: React.CSSProperties; // For dnd-kit transforms
+  style?: React.CSSProperties;
 }
 
+/**
+ * @component StyledButton
+ * @description A versatile button component supporting active states, an optional action menu,
+ * and integration with @dnd-kit for drag-and-drop functionality.
+ * It uses `forwardRef` to allow parent components (like dnd-kit sortable items) to attach a ref to its root DOM element.
+ */
 const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
   (
     {
-      id, // Destructure id
+      id,
       icon,
       title,
       isActive,
       onButtonClick,
       actionItems,
       popoverHeaderTitle,
-      attributes, // Destructure
-      listeners,  // Destructure
-      style,      // Destructure
+      attributes,
+      listeners,
+      style,
     },
-    ref // This is the ref from useSortable (setNodeRef)
+    ref // Forwarded ref, primarily for @dnd-kit's `setNodeRef`.
   ) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-    // This ref is for the root element of StyledButton, used for click-outside and ActionMenu positioning
+  // Ref for the component's root element. Used for ActionMenu positioning and click-outside detection.
   const componentRootRef = useRef<HTMLDivElement>(null);
-  const actionButtonRef = useRef<HTMLButtonElement>(null); // Ref for the three-dots button
+  // Ref for the action menu trigger button (three-dots icon).
+  const actionButtonRef = useRef<HTMLButtonElement>(null);
 
-    // Callback ref to assign the DOM node to both the forwarded ref (from dnd-kit)
-    // and the internal componentRootRef.
+  /**
+   * @function setCombinedRefs
+   * @description Manages multiple refs on a single DOM element.
+   * Assigns the node to both the internally managed `componentRootRef` and the `ref` forwarded from the parent (e.g., dnd-kit).
+   */
   const setCombinedRefs = (node: HTMLDivElement | null) => {
     (componentRootRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
     if (typeof ref === 'function') {
@@ -53,16 +75,19 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
   const activeIconColor = 'text-[#F59D0E]';
   const inactiveIconColor = 'text-[#8C93A1]';
 
+  /**
+   * @function handleActionClick
+   * @description Toggles the visibility of the ActionMenu.
+   * Stops event propagation to prevent unintended side effects, such as triggering `onButtonClick`.
+   */
   const handleActionClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent click from bubbling to onButtonClick or other handlers
+    e.stopPropagation();
     if (actionItems && actionItems.length > 0) {
-      setIsMenuOpen((prev) => {
-        console.log('[StyledButton] Toggling menu. Current isMenuOpen:', prev, 'Will be:', !prev);
-        return !prev;
-      });
+      setIsMenuOpen((prev) => !prev);
     }
   };
 
+  // Effect to handle clicks outside the ActionMenu to close it.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isMenuOpen && componentRootRef.current && !componentRootRef.current.contains(event.target as Node)) {
@@ -70,7 +95,6 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
       }
     };
 
-    // Only add listener if menu is open to avoid unnecessary listeners
     if (isMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
@@ -78,40 +102,36 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMenuOpen]); // componentRootRef is stable, no need in deps
+  }, [isMenuOpen]);
 
   const hasActionItems = actionItems && actionItems.length > 0;
-  console.log(`[StyledButton] Rendering. ID: ${id}, Title: ${title}, isActive: ${isActive}, hasActionItems: ${hasActionItems}, actionItems length: ${actionItems?.length}`);
 
   return (
-    // Wrapper for ActionMenu positioning context (now componentRootRef) and click-outside detection for the menu
-    // This is also the draggable element.
+    // Root div: Serves as the draggable element (@dnd-kit) and the positioning anchor for the ActionMenu.
     <div
-      ref={setCombinedRefs} // Apply combined refs for dnd-kit and internal logic
-      className="relative" // Existing class
-      style={style} // Apply dnd-kit transform styles
-      {...attributes} // Spread dnd attributes (e.g., role, aria-pressed)
-      {...listeners} // Spread dnd listeners (makes the whole component a drag handle)
+      ref={setCombinedRefs}
+      className="relative"
+      style={style} // Applied by @dnd-kit for drag transformations.
+      {...attributes} // Accessibility and interaction attributes from @dnd-kit.
+      {...listeners} // Drag event listeners from @dnd-kit, making the entire component draggable.
     >
-      {/* Main container for the button or button group styling */} 
+      {/* Visual container for the button parts (main button area and action trigger). */}
       <div
         className={`
           flex items-center h-[32px] transition-all duration-150 ease-in-out group
           ${isActive
-            ? `w-[108px] bg-white border border-[#E1E1E1] shadow-[0_0_3px_rgba(0,0,0,0.04),_0_0_1px_rgba(0,0,0,0.02)] rounded-lg`
-            : `w-[84px] bg-[#9DA4B2]/15 text-slate-700 rounded-lg hover:bg-[#9DA4B2]/35 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#2F72E2] focus-within:ring-inset focus-within:shadow-[0_0_3px_rgba(0,0,0,0.04),_0_0_1px_rgba(0,0,0,0.02),_0_0_0_1.5px_rgba(47,114,226,0.25)]`
+            ? `bg-white border border-[#E1E1E1] shadow-[0_0_3px_rgba(0,0,0,0.04),_0_0_1px_rgba(0,0,0,0.02)] rounded-lg`
+            : `bg-[#9DA4B2]/15 text-slate-700 rounded-lg hover:bg-[#9DA4B2]/35 focus-within:bg-white focus-within:ring-1 focus-within:ring-[#2F72E2] focus-within:ring-inset focus-within:shadow-[0_0_3px_rgba(0,0,0,0.04),_0_0_1px_rgba(0,0,0,0.02),_0_0_0_1.5px_rgba(47,114,226,0.25)]`
           }
         `}
       >
-        {/* Main clickable area (icon and title) */} 
+        {/* Primary interactive area of the button. */}
         <button
           type="button"
           onMouseDown={(e) => {
-            console.log('[StyledButton] Main button area onMouseDown. Calling onButtonClick.');
             if (onButtonClick && id !== undefined) { onButtonClick(id); }
-            e.stopPropagation();
+            e.stopPropagation(); // Prevents interference with dnd-kit drag initiation or parent handlers.
           }}
-          
           className={`
             flex items-center h-full py-1 px-2.5 focus:outline-none flex-grow min-w-0 
             ${isActive
@@ -126,19 +146,17 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
           </div>
         </button>
 
-        {/* Action trigger button (three-dots) - only if active and has items */} 
+        {/* Action menu trigger button (three-dots icon). Rendered only if active and action items exist. */}
         {isActive && hasActionItems && (
           <>
-            {/* Separator line */} 
-            <div className="h-[20px] w-px bg-[#E1E1E1] self-center"></div>
+            <div className="h-[20px] w-px bg-[#E1E1E1] self-center" aria-hidden="true"></div>
             <button
-              ref={actionButtonRef} // Ref for this specific button
+              ref={actionButtonRef}
               type="button"
               aria-label="Actions"
-              onMouseUp={handleActionClick}
+              onMouseUp={handleActionClick} // Using onMouseUp to avoid conflict with dnd-kit's onMouseDown for drag start.
               onMouseDown={(e) => {
-                console.log('[StyledButton] Action button onMouseDown, stopping propagation.');
-                e.stopPropagation();
+                e.stopPropagation(); // Crucial to prevent dnd-kit from interpreting this as a drag attempt.
               }}
               className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-gray-500 hover:bg-gray-200/70 rounded-r-lg"
             >
@@ -148,20 +166,21 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
         )}
       </div>
 
-      {/* ActionMenu (portaled) */} 
-      {/* ActionMenu (portaled) */}
+      {/* ActionMenu component, rendered conditionally and positioned relative to `componentRootRef`. */}
       {isMenuOpen && isActive && hasActionItems && popoverHeaderTitle && componentRootRef.current && (
         <ActionMenu
           headerTitle={popoverHeaderTitle}
-          items={actionItems!} // Assert non-null as hasActionItems is true
-          triggerRef={componentRootRef} // Position relative to the main button component
-          onClose={() => setIsMenuOpen(false)} // Callback to close the menu
+          items={actionItems!}
+          triggerRef={componentRootRef}
+          onClose={() => setIsMenuOpen(false)}
         />
       )}
     </div>
   );
 });
 
-StyledButton.displayName = 'StyledButton'; // Good practice for forwardRef components
+// Setting displayName is a good practice for components wrapped with `forwardRef` for better debugging.
+StyledButton.displayName = 'StyledButton';
 
+// `React.memo` optimizes the component by memoizing it, preventing re-renders if props haven't changed.
 export default React.memo(StyledButton);

@@ -27,12 +27,12 @@ import DeleteIcon from './components/icons/DeleteIcon';
 
 // Define menu items outside the component to ensure they are stable references
 const settingsMenuItems: ActionMenuItem[] = [
-    { id: 'set-first', type: 'item', label: 'Set as first page', icon: <SetAsFirstPageIcon />, onClick: () => console.log('Set as first page') },
-    { id: 'rename', type: 'item', label: 'Rename', icon: <RenameIcon />, onClick: () => console.log('Rename') },
-    { id: 'copy', type: 'item', label: 'Copy', icon: <CopyIcon />, onClick: () => console.log('Copy') },
-    { id: 'duplicate', type: 'item', label: 'Duplicate', icon: <DuplicateIcon />, onClick: () => console.log('Duplicate') },
+    { id: 'set-first', type: 'item', label: 'Set as first page', icon: <SetAsFirstPageIcon />, onClick: () => {} },
+    { id: 'rename', type: 'item', label: 'Rename', icon: <RenameIcon />, onClick: () => {} },
+    { id: 'copy', type: 'item', label: 'Copy', icon: <CopyIcon />, onClick: () => {} },
+    { id: 'duplicate', type: 'item', label: 'Duplicate', icon: <DuplicateIcon />, onClick: () => {} },
     { id: 'sep1', type: 'separator' },
-    { id: 'delete', type: 'item', label: 'Delete', icon: <DeleteIcon />, iconColor: '#EF494F', onClick: () => console.log('Delete') },
+    { id: 'delete', type: 'item', label: 'Delete', icon: <DeleteIcon />, iconColor: '#EF494F', onClick: () => {} },
   ];
 
 function App() {
@@ -45,19 +45,14 @@ function App() {
   const [pageItems, setPageItems] = useState<PageItem[]>([]); // Initialize with empty array first
 
   const handlePageClick = useCallback((clickedId: string | number) => {
-    console.log(`[App.tsx] handlePageClick called with clickedId: ${clickedId} (type: ${typeof clickedId})`);
     setPageItems((prevItems) => {
-      console.log('[App.tsx] prevItems before map:', JSON.stringify(prevItems.map(p => ({id: p.id, isActive: p.isActive}))));
       const newItems = prevItems.map((item) => {
         const isActive = item.id === clickedId;
         if (item.id === clickedId) {
-          console.log(`[App.tsx] Match found for clickedId '${clickedId}': item.id=${item.id} (type: ${typeof item.id}). Setting item.isActive to true.`);
         } else if (item.isActive && item.id !== clickedId) {
-          console.log(`[App.tsx] Item '${item.id}' was active, now setting to false.`);
         }
         return { ...item, isActive: isActive };
       });
-      console.log('[App.tsx] newItems in setPageItems after map:', JSON.stringify(newItems.map(p => ({id: p.id, isActive: p.isActive}))));
       return newItems;
     });
   }, []); // No dependencies needed as setPageItems updater form is used
@@ -81,7 +76,6 @@ function App() {
       newItems.splice(indexAfter + 1, 0, newPage);
       return newItems.map((item) => ({ ...item, isActive: item.id === newPageId }));
     });
-    console.log(`Add new item after index: ${indexAfter}, ID: ${newPageId}`);
   }, [pageItems, handlePageClick]); // settingsMenuItems is stable, handlePageClick is a dep
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
@@ -144,7 +138,7 @@ function App() {
       icon: <AddPageIcon className="w-4 h-4" />,
       type: 'addPageAction',
       isActive: false,
-      onPageClick: (id: string | number) => console.log('Trigger Add Page Flow! (id: ' + id + ')'),
+      onPageClick: (id: string | number) => {},
     },
   ], [handlePageClick]); // settingsMenuItems is stable from outer scope, handlePageClick is the key dependency
 
@@ -155,10 +149,8 @@ function App() {
 
   // Effect to monitor pageItems changes
   useEffect(() => {
-    console.log('[App.tsx] useEffect detected pageItems change:', JSON.stringify(pageItems.map(p => ({id: p.id, type: p.type, isActive: p.isActive}))));
   }, [pageItems]);
 
-  console.log('[App.tsx] Rendering with pageItems:', JSON.stringify(pageItems.map(p => ({id: p.id, type: p.type, isActive: p.isActive}))));
   return (
     <div className="flex flex-col items-center bg-gray-100 p-6 pb-40 relative"> 
       <div className="mb-10 text-center">
@@ -174,10 +166,10 @@ function App() {
           {/* Card 1: StyledButton States */}
           <div className="p-4 border rounded-md shadow-sm bg-slate-50 flex flex-col space-y-3">
             <h3 className="text-lg font-semibold text-gray-700 mb-2">StyledButton States</h3>
-            <StyledButton id="demo-inactive" icon={<InfoIcon />} title="Inactive Button" isActive={false} onButtonClick={() => console.log('Demo Inactive StyledButton clicked')} />
-            <StyledButton id="demo-active" icon={<DetailsIcon />} title="Active Button" isActive={true} onButtonClick={() => console.log('Demo Active StyledButton clicked')} />
+            <StyledButton id="demo-inactive" icon={<InfoIcon />} title="Inactive Button" isActive={false} onButtonClick={() => {}} />
+            <StyledButton id="demo-active" icon={<DetailsIcon />} title="Active Button" isActive={true} onButtonClick={() => {}} />
             <div>
-              <StyledButton id="demo-hover-focus" icon={<OtherIcon />} title="Hover/Focus Me" onButtonClick={() => console.log('Demo Hover/Focus StyledButton clicked')} />
+              <StyledButton id="demo-hover-focus" icon={<OtherIcon />} title="Hover/Focus Me" onButtonClick={() => {}} />
               <p className="text-xs text-gray-500 mt-1">Interact with this button to see hover and focus states defined in CSS.</p>
             </div>
           </div>
@@ -190,7 +182,7 @@ function App() {
               icon={<OtherIcon />} 
               title="Button w/ Menu"
               isActive={true}
-              onButtonClick={() => console.log('Demo Button w/ Menu main area clicked')}
+              onButtonClick={() => {}}
               actionItems={settingsMenuItems}
               popoverHeaderTitle="Button's Menu"
             />
@@ -222,7 +214,7 @@ function App() {
             </div>
             <div>
               <h4 className="text-md font-medium text-gray-600 mb-1">Add Button</h4>
-              <div className="flex justify-center"><AddButton onClick={() => console.log('Demo AddButton clicked')} /></div>
+              <div className="flex justify-center"><AddButton onClick={() => {}} /></div>
             </div>
             <div>
               <h4 className="text-md font-medium text-gray-600 mb-1">SVG Icons</h4>

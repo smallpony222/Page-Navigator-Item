@@ -47,7 +47,6 @@ interface SortablePageItemProps {
 }
 
 const SortablePageItem = memo<SortablePageItemProps>(({ item, pageItems, onAddItemClick, isLastItem }) => {
-  console.log(`[SortablePageItem] Rendering item ID: ${item.id}, isActive: ${item.isActive}`);
   const isDraggablePage = item.type === 'page' || item.type === undefined;
   const {
     attributes,
@@ -130,7 +129,6 @@ const SortablePageItem = memo<SortablePageItemProps>(({ item, pageItems, onAddIt
 });
 
 const Navigator: React.FC<NavigatorProps> = ({ pageItems, onAddItemClick, onDragEnd, className }) => {
-  console.log('[Navigator.tsx] Received pageItems:', JSON.stringify(pageItems.map(p => ({id: p.id, type: p.type, isActive: p.isActive}))));
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
