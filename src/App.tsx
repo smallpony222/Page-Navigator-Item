@@ -182,7 +182,7 @@ function App() {
               icon={<OtherIcon />} 
               title="Button w/ Menu"
               isActive={true}
-              onButtonClick={() => {}}
+              onButtonClick={() => {console.log('Button clicked!')}}
               actionItems={settingsMenuItems}
               popoverHeaderTitle="Button's Menu"
             />

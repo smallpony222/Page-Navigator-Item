@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 
 export interface ActionMenuItem {
@@ -26,7 +26,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (triggerRef.current && menuRef.current) {
       const triggerRect = triggerRef.current.getBoundingClientRect();
       const menuHeight = menuRef.current.offsetHeight;
