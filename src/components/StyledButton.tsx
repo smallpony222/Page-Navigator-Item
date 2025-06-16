@@ -147,7 +147,7 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
         </button>
 
         {/* Action menu trigger button (three-dots icon). Rendered only if active and action items exist. */}
-        {isActive && hasActionItems && (
+        {isActive && (
           <>
             <button
               ref={actionButtonRef}
