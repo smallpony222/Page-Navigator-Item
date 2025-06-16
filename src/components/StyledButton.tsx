@@ -166,7 +166,7 @@ const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
       </div>
 
       {/* ActionMenu component, rendered conditionally and positioned relative to `componentRootRef`. */}
-      {isMenuOpen && isActive && popoverHeaderTitle && componentRootRef.current && (
+      {isMenuOpen && isActive && popoverHeaderTitle && componentRootRef && (
         <ActionMenu
           headerTitle={popoverHeaderTitle}
           items={actionItems!}
