@@ -1,28 +1,54 @@
 // src/components/StyledButton.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, memo } from 'react'; // Added forwardRef and memo
 import DotsVerticalIcon from './icons/DotsVerticalIcon';
 import ActionMenu, { ActionMenuItem } from './ActionMenu';
+import { DraggableAttributes, DraggableSyntheticListeners } from '@dnd-kit/core'; // Added
 
 interface StyledButtonProps {
+  id: string | number; // Added id prop
   icon: React.ReactNode;
   title: string;
   isActive?: boolean;
-  onButtonClick?: () => void;
+  onButtonClick?: (id: string | number) => void; // Updated signature
   actionItems?: ActionMenuItem[];
   popoverHeaderTitle?: string;
+  // Props from useSortable
+  attributes?: DraggableAttributes;
+  listeners?: DraggableSyntheticListeners;
+  style?: React.CSSProperties; // For dnd-kit transforms
 }
 
-const StyledButton: React.FC<StyledButtonProps> = ({
-  icon,
-  title,
-  isActive,
-  onButtonClick,
-  actionItems,
-  popoverHeaderTitle,
-}) => {
+const StyledButton = forwardRef<HTMLDivElement, StyledButtonProps>(
+  (
+    {
+      id, // Destructure id
+      icon,
+      title,
+      isActive,
+      onButtonClick,
+      actionItems,
+      popoverHeaderTitle,
+      attributes, // Destructure
+      listeners,  // Destructure
+      style,      // Destructure
+    },
+    ref // This is the ref from useSortable (setNodeRef)
+  ) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null); // Ref for the entire button group for ActionMenu positioning & click-outside
-  const actionButtonRef = useRef<HTMLButtonElement>(null); // Ref for the three-dots button itself
+    // This ref is for the root element of StyledButton, used for click-outside and ActionMenu positioning
+  const componentRootRef = useRef<HTMLDivElement>(null);
+  const actionButtonRef = useRef<HTMLButtonElement>(null); // Ref for the three-dots button
+
+    // Callback ref to assign the DOM node to both the forwarded ref (from dnd-kit)
+    // and the internal componentRootRef.
+  const setCombinedRefs = (node: HTMLDivElement | null) => {
+    (componentRootRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    if (typeof ref === 'function') {
+      ref(node);
+    } else if (ref && typeof ref === 'object') {
+      ref.current = node;
+    }
+  };
 
   const activeIconColor = 'text-[#F59D0E]';
   const inactiveIconColor = 'text-[#8C93A1]';
@@ -30,15 +56,16 @@ const StyledButton: React.FC<StyledButtonProps> = ({
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent click from bubbling to onButtonClick or other handlers
     if (actionItems && actionItems.length > 0) {
-      setIsMenuOpen((prev) => !prev);
+      setIsMenuOpen((prev) => {
+        console.log('[StyledButton] Toggling menu. Current isMenuOpen:', prev, 'Will be:', !prev);
+        return !prev;
+      });
     }
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // If menu is open and click is outside the entire button component (menuRef),
-      // then close the menu.
-      if (isMenuOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      if (isMenuOpen && componentRootRef.current && !componentRootRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
       }
     };
@@ -51,13 +78,21 @@ const StyledButton: React.FC<StyledButtonProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isMenuOpen, menuRef]); // Effect dependencies
+  }, [isMenuOpen]); // componentRootRef is stable, no need in deps
 
   const hasActionItems = actionItems && actionItems.length > 0;
+  console.log(`[StyledButton] Rendering. ID: ${id}, Title: ${title}, isActive: ${isActive}, hasActionItems: ${hasActionItems}, actionItems length: ${actionItems?.length}`);
 
   return (
-    // Wrapper for ActionMenu positioning context (menuRef) and click-outside detection for the menu
-    <div className="relative" ref={menuRef}>
+    // Wrapper for ActionMenu positioning context (now componentRootRef) and click-outside detection for the menu
+    // This is also the draggable element.
+    <div
+      ref={setCombinedRefs} // Apply combined refs for dnd-kit and internal logic
+      className="relative" // Existing class
+      style={style} // Apply dnd-kit transform styles
+      {...attributes} // Spread dnd attributes (e.g., role, aria-pressed)
+      {...listeners} // Spread dnd listeners (makes the whole component a drag handle)
+    >
       {/* Main container for the button or button group styling */} 
       <div
         className={`
@@ -71,7 +106,12 @@ const StyledButton: React.FC<StyledButtonProps> = ({
         {/* Main clickable area (icon and title) */} 
         <button
           type="button"
-          onClick={onButtonClick}
+          onMouseDown={(e) => {
+            console.log('[StyledButton] Main button area onMouseDown. Calling onButtonClick.');
+            if (onButtonClick && id !== undefined) { onButtonClick(id); }
+            e.stopPropagation();
+          }}
+          
           className={`
             flex items-center h-full py-1 px-2.5 focus:outline-none flex-grow min-w-0 
             ${isActive
@@ -95,7 +135,11 @@ const StyledButton: React.FC<StyledButtonProps> = ({
               ref={actionButtonRef} // Ref for this specific button
               type="button"
               aria-label="Actions"
-              onClick={handleActionClick}
+              onMouseUp={handleActionClick}
+              onMouseDown={(e) => {
+                console.log('[StyledButton] Action button onMouseDown, stopping propagation.');
+                e.stopPropagation();
+              }}
               className="h-full w-[24px] flex-shrink-0 flex items-center justify-center p-0.5 focus:outline-none bg-transparent text-gray-500 hover:bg-gray-200/70 rounded-r-lg"
             >
               <DotsVerticalIcon className="w-4 h-4" />
@@ -105,16 +149,19 @@ const StyledButton: React.FC<StyledButtonProps> = ({
       </div>
 
       {/* ActionMenu (portaled) */} 
-      {isMenuOpen && isActive && hasActionItems && popoverHeaderTitle && menuRef.current && (
+      {/* ActionMenu (portaled) */}
+      {isMenuOpen && isActive && hasActionItems && popoverHeaderTitle && actionButtonRef.current && (
         <ActionMenu
           headerTitle={popoverHeaderTitle}
           items={actionItems!} // Assert non-null as hasActionItems is true
-          triggerRef={menuRef} // Position relative to the entire button group
+          triggerRef={actionButtonRef} // Position relative to the action button
           onClose={() => setIsMenuOpen(false)} // Callback to close the menu
         />
       )}
     </div>
   );
-};
+});
 
-export default StyledButton;
+StyledButton.displayName = 'StyledButton'; // Good practice for forwardRef components
+
+export default React.memo(StyledButton);

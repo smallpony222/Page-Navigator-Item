@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react'; // Added useMemo
 import './App.css'; // Keep App.css for any global app styles or remove if not needed
 
 import Navigator, { PageItem } from './components/Navigator';
@@ -9,6 +9,8 @@ import DetailsIcon from './components/icons/DetailsIcon';
 import OtherIcon from './components/icons/OtherIcon';
 import EndingIcon from './components/icons/EndingIcon';
 import AddPageIcon from './components/icons/AddPageIcon';
+import { DragEndEvent } from '@dnd-kit/core'; // Added
+import { arrayMove } from '@dnd-kit/sortable'; // Added
 import DocumentIcon from './components/icons/DocumentIcon'; // Example for newly added pages
 import { ActionMenuItem } from './components/ActionMenu'; // Import ActionMenu
 
@@ -19,79 +21,51 @@ import CopyIcon from './components/icons/CopyIcon';
 import DuplicateIcon from './components/icons/DuplicateIcon';
 import DeleteIcon from './components/icons/DeleteIcon';
 
-function App() {
-  // Updated data for ActionMenu as per new request
-  const settingsMenuItems: ActionMenuItem[] = [
-    { id: 'set-first', type: 'item', label: 'Set as first page', icon: <SetAsFirstPageIcon />, onClick: () => alert('Set as first page') },
-    { id: 'rename', type: 'item', label: 'Rename', icon: <RenameIcon />, onClick: () => alert('Rename') },
-    { id: 'copy', type: 'item', label: 'Copy', icon: <CopyIcon />, onClick: () => alert('Copy') },
-    { id: 'duplicate', type: 'item', label: 'Duplicate', icon: <DuplicateIcon />, onClick: () => alert('Duplicate') },
+// Define menu items outside the component to ensure they are stable references
+const settingsMenuItems: ActionMenuItem[] = [
+    { id: 'set-first', type: 'item', label: 'Set as first page', icon: <SetAsFirstPageIcon />, onClick: () => console.log('Set as first page') },
+    { id: 'rename', type: 'item', label: 'Rename', icon: <RenameIcon />, onClick: () => console.log('Rename') },
+    { id: 'copy', type: 'item', label: 'Copy', icon: <CopyIcon />, onClick: () => console.log('Copy') },
+    { id: 'duplicate', type: 'item', label: 'Duplicate', icon: <DuplicateIcon />, onClick: () => console.log('Duplicate') },
     { id: 'sep1', type: 'separator' },
-    { id: 'delete', type: 'item', label: 'Delete', icon: <DeleteIcon />, iconColor: '#EF494F', onClick: () => alert('Delete') },
+    { id: 'delete', type: 'item', label: 'Delete', icon: <DeleteIcon />, iconColor: '#EF494F', onClick: () => console.log('Delete') },
   ];
-  const [pageItems, setPageItems] = useState<PageItem[]>([
-    {
-      id: 'info',
-      title: 'Info',
-      icon: <InfoIcon className="w-5 h-5" />,
-      isActive: true,
-      onPageClick: () => handlePageClick('info'),
-      actionItems: settingsMenuItems,
-      popoverHeaderTitle: 'Info Settings',
-    },
-    {
-      id: 'details',
-      title: 'Details',
-      icon: <DetailsIcon className="w-5 h-5" />,
-      isActive: false,
-      onPageClick: () => handlePageClick('details'),
-      actionItems: settingsMenuItems,
-      popoverHeaderTitle: 'Details Settings',
-    },
-    {
-      id: 'other',
-      title: 'Other',
-      icon: <OtherIcon className="w-5 h-5" />,
-      isActive: false,
-      onPageClick: () => handlePageClick('other'),
-      actionItems: settingsMenuItems,
-      popoverHeaderTitle: 'Other Settings',
-    },
-    {
-      id: 'ending',
-      title: 'Ending',
-      icon: <EndingIcon className="w-5 h-5" />,
-      isActive: false,
-      onPageClick: () => handlePageClick('ending'),
-      actionItems: settingsMenuItems,
-      popoverHeaderTitle: 'Ending Settings',
-    },
-    {
-      id: 'addPageBtn',
-      title: 'Add Page',
-      icon: <AddPageIcon className="w-4 h-4" />, // Note: this icon is 16x16 as per SVG
-      type: 'addPageAction',
-      isActive: false, // This type of button should not become 'active'
-      onPageClick: () => alert('Trigger Add Page Flow!'), // Define actual add page logic here
-      // actionItems and popoverHeaderTitle are not needed for this type
-    },
-  ]);
 
-  const handlePageClick = (id: string | number) => {
-    setPageItems((prevItems) =>
-      prevItems.map((item) => ({ ...item, isActive: item.id === id }))
-    );
-  };
+function App() {
+  // settingsMenuItems definition removed from here
+  // The array above was erroneously re-inserted here and is now removed.
 
-  const handleAddItem = (indexAfter: number) => {
+  // Define handlers before initialPageItems
+  const [pageItems, setPageItems] = useState<PageItem[]>([]); // Initialize with empty array first
+
+  const handlePageClick = useCallback((clickedId: string | number) => {
+    console.log(`[App.tsx] handlePageClick called with clickedId: ${clickedId} (type: ${typeof clickedId})`);
+    setPageItems((prevItems) => {
+      console.log('[App.tsx] prevItems before map:', JSON.stringify(prevItems.map(p => ({id: p.id, isActive: p.isActive}))));
+      const newItems = prevItems.map((item) => {
+        const isActive = item.id === clickedId;
+        if (item.id === clickedId) {
+          console.log(`[App.tsx] Match found for clickedId '${clickedId}': item.id=${item.id} (type: ${typeof item.id}). Setting item.isActive to true.`);
+        } else if (item.isActive && item.id !== clickedId) {
+          console.log(`[App.tsx] Item '${item.id}' was active, now setting to false.`);
+        }
+        return { ...item, isActive: isActive };
+      });
+      console.log('[App.tsx] newItems in setPageItems after map:', JSON.stringify(newItems.map(p => ({id: p.id, isActive: p.isActive}))));
+      return newItems;
+    });
+  }, []); // No dependencies needed as setPageItems updater form is used
+
+  const handleAddItem = useCallback((indexAfter: number) => {
     const newPageId = `page-${Date.now()}`;
     const newPageTitle = `New Page ${pageItems.filter(item => item.type !== 'addPageAction').length + 1}`;
     const newPage: PageItem = {
       id: newPageId,
       title: newPageTitle,
-      icon: <DocumentIcon className="w-5 h-5" />, // Default icon for new pages
+      icon: <DocumentIcon className="w-5 h-5" />,
+      type: 'page',
       isActive: true,
-      onPageClick: () => handlePageClick(newPageId),
+      onPageClick: handlePageClick,
       actionItems: settingsMenuItems,
       popoverHeaderTitle: `${newPageTitle} Settings`,
     };
@@ -102,10 +76,85 @@ function App() {
       return newItems.map((item) => ({ ...item, isActive: item.id === newPageId }));
     });
     console.log(`Add new item after index: ${indexAfter}, ID: ${newPageId}`);
-  };
+  }, [pageItems, handlePageClick]); // settingsMenuItems is stable, handlePageClick is a dep
 
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setPageItems((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }, []);
+
+  // Define initialPageItems after handlers, using useMemo for stability
+  const initialPageItems = useMemo((): PageItem[] => [
+    {
+      id: 'info',
+      title: 'Info',
+      icon: <InfoIcon className="w-5 h-5" />,
+      type: 'page', // Explicitly set type
+      isActive: true,
+      onPageClick: handlePageClick,
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Info Settings',
+    },
+    {
+      id: 'details',
+      title: 'Details',
+      icon: <DetailsIcon className="w-5 h-5" />,
+      type: 'page',
+      isActive: false,
+      onPageClick: handlePageClick,
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Details Settings',
+    },
+    {
+      id: 'other',
+      title: 'Other',
+      icon: <OtherIcon className="w-5 h-5" />,
+      type: 'page',
+      isActive: false,
+      onPageClick: handlePageClick,
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Other Settings',
+    },
+    {
+      id: 'ending',
+      title: 'Ending',
+      icon: <EndingIcon className="w-5 h-5" />,
+      type: 'page',
+      isActive: false,
+      onPageClick: handlePageClick,
+      actionItems: settingsMenuItems,
+      popoverHeaderTitle: 'Ending Settings',
+    },
+    {
+      id: 'addPageBtn',
+      title: 'Add Page',
+      icon: <AddPageIcon className="w-4 h-4" />,
+      type: 'addPageAction',
+      isActive: false,
+      onPageClick: (id: string | number) => console.log('Trigger Add Page Flow! (id: ' + id + ')'),
+    },
+  ], [handlePageClick]); // settingsMenuItems is stable from outer scope, handlePageClick is the key dependency
+
+  // Effect to set initial page items after component mounts and handlers are defined
+  useEffect(() => {
+    setPageItems(initialPageItems);
+  }, [initialPageItems]); // Depend on the memoized initialPageItems
+
+  // Effect to monitor pageItems changes
+  useEffect(() => {
+    console.log('[App.tsx] useEffect detected pageItems change:', JSON.stringify(pageItems.map(p => ({id: p.id, type: p.type, isActive: p.isActive}))));
+  }, [pageItems]);
+
+  console.log('[App.tsx] Rendering with pageItems:', JSON.stringify(pageItems.map(p => ({id: p.id, type: p.type, isActive: p.isActive}))));
   return (
-    <div className="flex flex-col items-center bg-gray-100 p-6 pb-40 relative"> {/* Added pb-40 for spacing, relative for potential future absolute children if any */}
+    <div className="flex flex-col items-center bg-gray-100 p-6 pb-40 relative"> 
       <div className="mb-10 text-center">
         <h1 className="text-4xl font-bold text-gray-800">Page Navigation Demo</h1>
         <p className="text-gray-600 mt-2">Interactive navigation component with dynamic page adding.</p>
@@ -115,7 +164,7 @@ function App() {
       {/* Fixed Footer Section */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 w-full flex flex-col items-center">
         <div className="w-full overflow-x-auto overflow-y-visible"> {/* Allow navigator container to take full width and ensure vertical overflow is visible */}
-          <Navigator pageItems={pageItems} onAddItemClick={handleAddItem} />
+          <Navigator pageItems={pageItems} onAddItemClick={handleAddItem} onDragEnd={handleDragEnd} />
         </div>
 
       </div>
